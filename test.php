@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Medaiwiki API Search Tests</title>
+  <title>Mediawiki API Search Tests</title>
   <link rel="stylesheet" href="packages/qunit/qunit/qunit.css">
 
   <script src="packages/jquery/jquery.js"></script>
