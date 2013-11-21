@@ -10,9 +10,9 @@ function createAsyncCounter(count) {
 
 // Test that search function
 asyncTest('mediawikiSearch.search', function() {
-	var countDown = createAsyncCounter(5);
+	var countDown = createAsyncCounter(7);
 
-	// Test that it returns a 200 status code
+	// Test that it returns a 200 status code for various endpoints
 	function testSearchResponseHeader(endpoint) {
 		mediawikiSearch.search(endpoint, 'small business').done(function(data, status, xhr) {
 			deepEqual(xhr.status, 200);
@@ -25,6 +25,7 @@ asyncTest('mediawikiSearch.search', function() {
 	// Test that it returns at most 'limit' responses
 	function testSearchResponseLimit(endpoint, term, limit) {
 		mediawikiSearch.search(endpoint, term, limit).done(function(data, status, xhr) {
+			console.log(data.query);
 			ok(data.query.search.length <= limit, 'Response length for term ' + term + ' under or equal to ' + limit +'.');
 		}).always(countDown);
 	}
@@ -32,5 +33,33 @@ asyncTest('mediawikiSearch.search', function() {
 	testSearchResponseLimit(sbEndpoint, 'small business', 10);
 	testSearchResponseLimit(sbEndpoint, 'small business', 1);
 	testSearchResponseLimit(sbEndpoint, 'random', 5);
+
+	// testOpenSearchRequest
+	function testOSResponseStatus(endpoint) {
+		mediawikiSearch.openSearch(endpoint, 'small business', 10).done(function(data, status, xhr) {
+			deepEqual(xhr.status, 200);
+		}).always(countDown);
+	}
+
+	testOSResponseStatus(sbEndpoint);
+	testOSResponseStatus(wpEndpoint);
 });
 
+test('mediawikiSearch.formURLs', function() {
+
+	function testFormURL(title, expected) {
+		deepEqual(mediawikiSearch.formURL('http://smallbusiness.com/wiki/', title), expected, title + ' formatted correctly');
+	}
+
+	var titles = ['Small Business administration', 'sba something or another', 'justone', '', '1234 and 5678'];
+	var formatted = ['http://smallbusiness.com/wiki/Small_Business_Administration', 'http://smallbusiness.com/wiki/Sba_Something_Or_Another', 'http://smallbusiness.com/wiki/Justone', 'http://smallbusiness.com/wiki/', 'http://smallbusiness.com/wiki/1234_And_5678'];
+
+	testFormURL(titles[0], 'http://smallbusiness.com/wiki/Small_Business_Administration');
+	testFormURL(titles[1], 'http://smallbusiness.com/wiki/Sba_Something_Or_Another');
+	testFormURL(titles[2], 'http://smallbusiness.com/wiki/Justone');
+	testFormURL(titles[3], 'http://smallbusiness.com/wiki/');
+	testFormURL(titles[4], 'http://smallbusiness.com/wiki/1234_And_5678');
+
+	deepEqual(mediawikiSearch.formURLs('http://smallbusiness.com/wiki/', titles), formatted, 'FormURLs formatting correctly.');
+
+});
