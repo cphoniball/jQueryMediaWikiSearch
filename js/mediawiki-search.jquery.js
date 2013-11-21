@@ -24,7 +24,7 @@ var mediawikiSearch = function() {
 		});
 	}
 
-	var makeOpenSearchRequest = function(endpoint, term, limit, format) {
+	var makeOpenSearchRequest = function(endpoint, term, limit) {
 		return $.ajax({
 			url: endpoint,
 			method: 'GET',
@@ -33,7 +33,7 @@ var mediawikiSearch = function() {
 				action: 'opensearch',
 				search: term,
 				limit: limit || 10,
-				format: format || 'json'
+				format: 'json'
 			}
 		});
 	}
@@ -50,7 +50,7 @@ var mediawikiSearch = function() {
 		return baseURL + title.split(' ').map(function(e, i) {
 			return e[0].toUpperCase() + e.substring(1, e.length);
 		}).join('_');
-	}
+	};
 
 	// Parses titles returned from Opensearch into valid URls
 	// Arguments:
@@ -61,13 +61,37 @@ var mediawikiSearch = function() {
 		return titles.map(function(e, i) {
 			return formURL(baseURL, e);
 		});
+	};
+
+	var generateListItemMarkup = function(title, url) {
+		return '<li><a href="' + url + '">' + title + '</a></li>';
+	};
+
+	var generateListMarkup = function(titles, urls) {
+		var markupArray = titles.map(function(e, i) {
+			return generateListItemMarkup(e, urls[i]);
+		});
+		return markupArray.join('');
 	}
 
 	return {
 		search: makeSearchRequest,
 		openSearch: makeOpenSearchRequest,
 		formURL: formURL,
-		formURLs: formURLs
+		formURLs: formURLs,
+		generateList: generateListMarkup
 	}
 
 }();
+
+
+$.fn.appendMediawikiResultsList = function(endpoint, term, limit, baseURL) {
+	var mw = mediawikiSearch;
+	var $appendTo = this;
+	mw.openSearch(endpoint, term, limit).done(function(data, status, xhr) {
+		var urls = mw.formURLs(baseURL, data[1]);
+		var titles = data[1];
+		var listMarkup  = mw.generateList(titles, urls);
+		$appendTo.append(listMarkup);
+	});
+}

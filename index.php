@@ -21,6 +21,8 @@
 
 	<pre><div class="os-xmlfm"></div></pre>
 
+	<ul class="searchResults"></ul>
+
 
 
 
