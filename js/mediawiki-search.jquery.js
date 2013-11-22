@@ -152,7 +152,7 @@ $.fn.appendMediawikiResultsList = function(endpoint, term, limit, baseURL) {
 	});
 };
 
-$.fn.appendMultiTermResults = function(endpoint, terms, limit, baseURL) {
+$.fn.appendMultiTermResults = function(endpoint, terms, limit, baseURL, callback) {
 	function createAsyncCounter(count) {
 		count = count || 1;
 		return function() { --count || insertList(); };
@@ -178,5 +178,6 @@ $.fn.appendMultiTermResults = function(endpoint, terms, limit, baseURL) {
 		var urls = mw.formURLs(baseURL, titles);
 		console.log('The urls are ' + urls);
 		$appendTo.append(mw.generateList(titles, urls));
+		callback();
 	}
 };
