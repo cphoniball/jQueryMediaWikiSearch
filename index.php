@@ -23,6 +23,8 @@
 
 	<ul class="searchResults"></ul>
 
+	<ul class="multiSearchResults"></ul>
+
 
 
 

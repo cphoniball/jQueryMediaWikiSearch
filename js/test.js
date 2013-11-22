@@ -61,5 +61,29 @@ test('mediawikiSearch.formURLs', function() {
 	testFormURL(titles[4], 'http://smallbusiness.com/wiki/1234_And_5678');
 
 	deepEqual(mediawikiSearch.formURLs('http://smallbusiness.com/wiki/', titles), formatted, 'FormURLs formatting correctly.');
+});
 
+test('mediawikiSearch.combineLists', function() {
+
+	function testCombineLists(lists, expected) {
+		deepEqual(mediawikiSearch.combineLists(lists, 4), expected, 'Combine lists works for ' + lists);
+	}
+
+	var list1 = [
+		['something', 'else', 'here'],
+		['and', 'this', 'new'],
+		['testing', 'the', 'function']
+	];
+	var list1combined = ['something', 'and', 'testing', 'else'];
+
+	var list2 = [
+		['this', 'is', 'going', 'to', 'have', 'duplicates'],
+		['duplicates', 'what', 'are', 'those'],
+		['something', 'duplicates', 'are'],
+		['here', 'is', 'a', 'final', 'list']
+	];
+	var list2combined = ['duplicates', 'are', 'is', 'this']
+
+	testCombineLists(list1, list1combined);
+	testCombineLists(list2, list2combined);
 });
