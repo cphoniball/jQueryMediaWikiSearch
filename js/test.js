@@ -9,7 +9,7 @@ function createAsyncCounter(count) {
 }
 
 // Test that search function
-asyncTest('mediawikiSearch.search', function() {
+asyncTest('mediawikiSearch searches and queries', function() {
 	var countDown = createAsyncCounter(7);
 
 	// Test that it returns a 200 status code for various endpoints

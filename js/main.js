@@ -4,6 +4,8 @@ $(document).ready(function() {
 
 	//$('.multiSearchResults').appendMultiTermResults('http://smallbusiness.com/w/api.php', ['tax', 'small business', 'arizona'], 10, 'http://smallbusiness.com/wiki/');
 
+	var mw = mediawikiSearch;
+
 	function validateSearchForm() {
 		var limit = $('#limit').val();
 		var terms = $('#terms').val();
@@ -36,6 +38,15 @@ $(document).ready(function() {
 		}
 	});
 
+	// mediawikiSearch.openSearch('http://en.wikipedia.org/w/api.php', 'small business', 10, 'xml').always(function(data, status, xhr) {
+	// 	console.log('The status is ' + status);
+	// 	console.log("The fucking call finished.");
+	// 	console.log(data);
+	// 	console.log(xhr);
+	// 	console.log(xhr.responseXML);
+	// });
+
+	mw.delegateQuery('http://en.wikipedia.org/w/api.php', 'small business', 10);
 
 
 });

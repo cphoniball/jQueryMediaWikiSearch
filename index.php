@@ -6,8 +6,8 @@
   <link rel="stylesheet" href="packages/bootstrap/dist/css/bootstrap.css">
   <link rel="stylesheet" href="packages/font-awesome/css/font-awesome.css">
 
-  <script src="packages/bootstrap/dist/bootstrap.js"></script>
   <script src="packages/jquery/jquery.js"></script>
+  <script src="packages/bootstrap/dist/js/bootstrap.js"></script>
   <script src="js/mediawiki-search.jquery.js"></script>
   <script src="js/main.js"></script>
 </head>
@@ -57,6 +57,8 @@
 				<p class="hidden loader">Loading results... <i class="fa fa-spinner fa-spin"></i></p>
 				<ol class="results-list"><!-- filled via ajax on form submit --></ol>
 			</div>
+
+			<div class="xml-results"></div>
 
 		</div><!-- end .form-container -->
 	</div><!-- end #main.row -->
