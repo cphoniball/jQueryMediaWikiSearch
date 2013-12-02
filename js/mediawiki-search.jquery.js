@@ -41,34 +41,72 @@ var mediawikiSearch = function() {
 	// Params:
 	//   internalURL: URL to the PHP function that will call the mediawiki
 	//   endpoint: endpoint of the mediawiki API that you're calling
-	//   term: search term or terms - if there are multiple, recursively calls the function
+	//   terms: an array of search terms
 	//   limit: number of search results to receive
 	// Return: An array of jqXHR deferred object or objects, if there were multiple requests
-	var delegateQuery = function(internalURL, endpoint, terms, limit, callback) {
+	var delegateQuery = function(internalURL, endpoint, terms, limit, callback, callbackArgs) {
 		var requests = [];
-		var counter = createAsyncCounter(terms.length, callback);
 
- 	 	if (Array.isArray(terms)) { // base, multi-term case
-			terms.forEach(function(e, i) {
-				requests.push(delegateQuery(internalURL, endpoint, e, limit));
-			});
-			return requests;
-		} else { // single term
-			requests.push($.ajax({
+		var sendQuery = function(term) {
+			return $.ajax({
 				url: internalURL,
 				method: 'POST',
 				data: {
 					action: 'opensearch',
 					endpoint: endpoint,
-					search: terms,
+					search: term,
 					limit: limit || 20,
 					format: 'xml',
-					url: _formQueryURL(endpoint, terms, limit)
+					url: _formQueryURL(endpoint, term, limit)
 				}
-			}));
-			return requests;
+			});
+		}
+
+		// make all requests and add jqXHR objects into requests array
+		terms.forEach(function(e, i) { requests.push(sendQuery(e)); });
+
+		return requests;
+	}
+
+	var processResults = function(requests, callback) {
+		var results = [];
+		var countDown = createAsyncCounter(requests.length, extractData);
+		var thisFunc = this;
+
+		requests.forEach(function(e, i) {
+			e.done(function(data, status, xhr) {
+				results.push($(data).find('item'));
+			}).always(countDown);
+		});
+
+		function extractData() {
+			results = combineLists(results, 10);
+			callback(results);
 		}
 	}
+
+	// Returns a string that can be inserted as HTML
+	var createRelatedItems = function(results) {
+		var relatedString = '';
+
+		function wrapHeadline(link, title) { return  '<a href="' + link + '">' + title + '</a>'; }
+		function wrapBody(description) { return '<p>' + description + '</p>'; }
+		function wrapItem(e) {
+			var headline = $(e).find('text').text();
+			var url = $(e).find('url').text();
+			var description = $(e).find('description').text();
+
+			return '<div class="related-item">' + wrapHeadline(url, headline) + wrapBody(description) + '</div>';
+		}
+
+		results.forEach(function(e, i) {
+			relatedString += wrapItem(e);
+		});
+
+		$('.xml-results').html(relatedString);
+		return relatedString;
+	}
+
 
 	// Executes multiple searches for each term in an array
 	// Returns an array of jqXHR objects that will allow execution through a deferred object
@@ -128,7 +166,6 @@ var mediawikiSearch = function() {
 			});
 		}
 		combined.forEach(function(e, i) {
-			console.log(uniques);
 			var index = uniques.indexOf(e);
 			if (index === -1) uniques.push(e);
 			else {
@@ -155,6 +192,8 @@ var mediawikiSearch = function() {
 		search: makeOpenSearchRequest,
 		multiSearch: multiTermSearch,
 		delegateQuery: delegateQuery,
+		processResults: processResults,
+		createRelatedItems: createRelatedItems,
 		formURL: formURL,
 		formURLs: formURLs,
 		generateList: generateListMarkup,
