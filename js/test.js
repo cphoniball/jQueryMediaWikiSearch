@@ -87,3 +87,13 @@ test('mediawikiSearch.combineLists', function() {
 	testCombineLists(list1, list1combined);
 	testCombineLists(list2, list2combined);
 });
+
+test('mediawikiSearch.formQueryURL', function() {
+
+	function testQueryURL(endpoint, term, limit, expected) {
+		deepEqual(mediawikiSearch.formQueryURL(endpoint, term, limit), expected);
+	}
+
+	testQueryURL('http://en.wikipedia.org/w/api.php', 'small business', 10, 'http://en.wikipedia.org/w/api.php?action=opensearch&format=xml&search=small%20business&limit=10');
+
+});

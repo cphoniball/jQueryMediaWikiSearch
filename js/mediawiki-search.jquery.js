@@ -108,9 +108,15 @@ var mediawikiSearch = function() {
 				endpoint: endpoint,
 				search: term,
 				limit: limit || 20,
-				format: 'xml'
+				format: 'xml',
+				url: formQueryURL(endpoint, term, limit)
 			}
 		});
+	}
+
+	var formQueryURL = function(endpoint, term, limit) {
+		term = term.replace(' ', '%20');
+		return endpoint + '?action=opensearch&search=' + term + '&limit=' + limit + '&format=xml';
 	}
 
 	// endpoint: string, endpoint of wiki api
@@ -220,6 +226,7 @@ var mediawikiSearch = function() {
 		xmlToJson: xmlToJson,
 		openSearch: makeOpenSearchRequest,
 		multiSearch: multiTermSearch,
+		formQueryURL: formQueryURL,
 		delegateQuery: delegateQuery,
 		formURL: formURL,
 		formURLs: formURLs,

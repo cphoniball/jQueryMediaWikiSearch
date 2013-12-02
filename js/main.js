@@ -47,6 +47,13 @@ $(document).ready(function() {
 	// });
 
 	mw.delegateQuery('http://en.wikipedia.org/w/api.php', 'small business', 10);
+	mw.delegateQuery('http://smallbusiness.com/w/api.php', 'small business', 10).done(function(data, status, xhr) {
+		var $xmlr = $.parseXML(data);
+		console.log($xmlr);
 
+		$(data).find('item').each(function(i, e) {
+			$('.xml-results').append(e).append('<br>');
+		});
+	});
 
 });
