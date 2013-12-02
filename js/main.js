@@ -39,8 +39,10 @@ $(document).ready(function() {
 	});
 
 
-	var queries = mw.delegateQuery('http://localhost:8888/mwapisearch/functions.php', 'http://en.wikipedia.org/w/api.php', ['something', 'small business', 'one two three'], 10);
+	// var queries = mw.delegateQuery('http://localhost:8888/mwapisearch/functions.php', 'http://en.wikipedia.org/w/api.php', ['something', 'small business', 'one two three'], 10);
 
-	mw.processResults(queries, mw.createRelatedItems);
+	// mw.processResults(queries, $('.xml-results').setXMLResults);
+
+	$('.xml-results').appendXMLResults('http://localhost:8888/mwapisearch/functions.php', 'http://en.wikipedia.org/w/api.php', ['something', 'small business', 'one two three'], 10);
 
 });

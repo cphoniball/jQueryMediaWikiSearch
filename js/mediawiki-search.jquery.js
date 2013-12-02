@@ -44,7 +44,7 @@ var mediawikiSearch = function() {
 	//   terms: an array of search terms
 	//   limit: number of search results to receive
 	// Return: An array of jqXHR deferred object or objects, if there were multiple requests
-	var delegateQuery = function(internalURL, endpoint, terms, limit, callback, callbackArgs) {
+	var delegateQuery = function(internalURL, endpoint, terms, limit) {
 		var requests = [];
 
 		var sendQuery = function(term) {
@@ -102,11 +102,13 @@ var mediawikiSearch = function() {
 		results.forEach(function(e, i) {
 			relatedString += wrapItem(e);
 		});
-
-		$('.xml-results').html(relatedString);
 		return relatedString;
 	}
 
+	var insertRelatedItems = function(results, $container) {
+		var relatedString = createReleatedItems(results);
+		$container.html(relatedString);
+	}
 
 	// Executes multiple searches for each term in an array
 	// Returns an array of jqXHR objects that will allow execution through a deferred object
@@ -238,3 +240,13 @@ $.fn.appendMultiTermResults = function(endpoint, terms, limit, baseURL, callback
 		callback();
 	}
 };
+
+$.fn.appendXMLResults = function(internalURL, endpoint, terms, limit) {
+	var mw = mediawikiSearch;
+	var $container = this;
+	var requests = mw.delegateQuery(internalURL, endpoint, terms, limit);
+
+	mw.processResults(requests, function(results) {
+		$container.html(mw.createRelatedItems(results));
+	});
+}
