@@ -4,72 +4,17 @@ var mediawikiSearch = function() {
 		return endpoint + '?action=opensearch&format=' + format  + '&search=' + term + '&limit=' + limit;
 	}
 
-	// Changes XML to JSON
-	var xmlToJson = function(xml) {
-
-		// Create the return object
-		var obj = {};
-
-		if (xml.nodeType == 1) { // element
-			// do attributes
-			if (xml.attributes.length > 0) {
-			obj["@attributes"] = {};
-				for (var j = 0; j < xml.attributes.length; j++) {
-					var attribute = xml.attributes.item(j);
-					obj["@attributes"][attribute.nodeName] = attribute.nodeValue;
-				}
-			}
-		} else if (xml.nodeType == 3) { // text
-			obj = xml.nodeValue;
-		}
-
-		// do children
-		if (xml.hasChildNodes()) {
-			for(var i = 0; i < xml.childNodes.length; i++) {
-				var item = xml.childNodes.item(i);
-				var nodeName = item.nodeName;
-				if (typeof(obj[nodeName]) == "undefined") {
-					obj[nodeName] = xmlToJson(item);
-				} else {
-					if (typeof(obj[nodeName].push) == "undefined") {
-						var old = obj[nodeName];
-						obj[nodeName] = [];
-						obj[nodeName].push(old);
-					}
-					obj[nodeName].push(xmlToJson(item));
-				}
-			}
-		}
-		return obj;
-	};
+	var _formQueryURL = function(endpoint, term, limit) {
+		term = term.replace(/ /g, '%20'); // need to enable global paramater on replace regex
+		return endpoint + '?action=opensearch&search=' + term + '&limit=' + limit + '&format=xml';
+	}
 
 	// counts down for multiple async calls
 	// executes callback once the count reaches 0
 	// from so http://stackoverflow.com/questions/9431597/unit-testing-ajax-requests-with-qunit
-	var createAsyncCounter = function(count) {
+	var createAsyncCounter = function(count, callback) {
 		count = count || 1;
-		console.log('Count = ' + count);
-		return function() { --count || callback; };
-	}
-
-	// Makes a search request and jqXHR object
-	// Params:
-	// 	host: Hostname for the mediawiki you're making an api call to, e.g. wikipedia.org
-	//  term: Search term
-	//  limit: Number of results
-	var makeSearchRequest = function(endpoint, term, limit) {
-		return $.ajax({
-			url: endpoint,
-			method: 'GET',
-			dataType: 'jsonp',
-			data: {
-				action: 'query',
-				list: 'search',
-				format: 'json',
-				srsearch: term,
-				srlimit: limit || 10
-			}
-		});
+		return function() { --count || callback(); };
 	}
 
 	// Makes an Opensearch request. Since data is requested to be returned in json format
@@ -88,57 +33,42 @@ var mediawikiSearch = function() {
 				search: term,
 				limit: limit || 10,
 				format: format || 'json'
-			},
-			success: function(data) {
-				console.log(data);
-			},
-			error: function(xhr, status, error) {
-				console.log('There was an error ' + error);
-			}
-
-		});
-	}
-
-	var delegateQuery = function(endpoint, term, limit) {
-		return $.ajax({
-			url: 'http://localhost:8888/mwapisearch/functions.php',
-			method: 'POST',
-			data: {
-				action: 'opensearch',
-				endpoint: endpoint,
-				search: term,
-				limit: limit || 20,
-				format: 'xml',
-				url: formQueryURL(endpoint, term, limit)
 			}
 		});
 	}
 
-	var formQueryURL = function(endpoint, term, limit) {
-		term = term.replace(' ', '%20');
-		return endpoint + '?action=opensearch&search=' + term + '&limit=' + limit + '&format=xml';
+	// Delegates the request to the mediawiki API to a server-side function to overcome cross-domain limitations on transmitting XML data
+	// Params:
+	//   internalURL: URL to the PHP function that will call the mediawiki
+	//   endpoint: endpoint of the mediawiki API that you're calling
+	//   term: search term or terms - if there are multiple, recursively calls the function
+	//   limit: number of search results to receive
+	// Return: An array of jqXHR deferred object or objects, if there were multiple requests
+	var delegateQuery = function(internalURL, endpoint, terms, limit, callback) {
+		var requests = [];
+		var counter = createAsyncCounter(terms.length, callback);
+
+ 	 	if (Array.isArray(terms)) { // base, multi-term case
+			terms.forEach(function(e, i) {
+				requests.push(delegateQuery(internalURL, endpoint, e, limit));
+			});
+			return requests;
+		} else { // single term
+			requests.push($.ajax({
+				url: internalURL,
+				method: 'POST',
+				data: {
+					action: 'opensearch',
+					endpoint: endpoint,
+					search: terms,
+					limit: limit || 20,
+					format: 'xml',
+					url: _formQueryURL(endpoint, terms, limit)
+				}
+			}));
+			return requests;
+		}
 	}
-
-	// endpoint: string, endpoint of wiki api
-	// titles: array of strings to query
-	var makeQueryRequest = function(endpoint, titles) {
-		var titlestring = titles.join('|');
-		return $.ajax({
-			url: endpoint,
-			method: 'GET',
-			dataType: 'jsonp',
-			data: {
-				action: 'query',
-				titles: titlestring,
-				format: 'json',
-				prop: 'info|images',
-				inprop: 'url', // information to retrieve
-				imlimit: 1 // number of images to retrieve
-			}
-		});
-	}
-
-
 
 	// Executes multiple searches for each term in an array
 	// Returns an array of jqXHR objects that will allow execution through a deferred object
@@ -222,18 +152,14 @@ var mediawikiSearch = function() {
 
 
 	return {
-		search: makeSearchRequest,
-		xmlToJson: xmlToJson,
-		openSearch: makeOpenSearchRequest,
+		search: makeOpenSearchRequest,
 		multiSearch: multiTermSearch,
-		formQueryURL: formQueryURL,
 		delegateQuery: delegateQuery,
 		formURL: formURL,
 		formURLs: formURLs,
 		generateList: generateListMarkup,
 		combineLists: combineLists,
-		createAsyncCounter: createAsyncCounter,
-		query: makeQueryRequest
+		asyncCounter: createAsyncCounter
 	}
 
 }();
@@ -250,14 +176,9 @@ $.fn.appendMediawikiResultsList = function(endpoint, term, limit, baseURL) {
 };
 
 $.fn.appendMultiTermResults = function(endpoint, terms, limit, baseURL, callback) {
-	function createAsyncCounter(count) {
-		count = count || 1;
-		return function() { --count || insertList(); };
-	}
-
 	var mw = mediawikiSearch;
 	var $appendTo = this;
-	var countDown = createAsyncCounter(terms.length);
+	var countDown = mw.asyncCounter(terms.length, insertList)
 	var requests = mw.multiSearch(endpoint, terms, limit);
 	var resultsArray = [];
 

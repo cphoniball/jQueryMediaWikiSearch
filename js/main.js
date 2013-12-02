@@ -38,22 +38,7 @@ $(document).ready(function() {
 		}
 	});
 
-	// mediawikiSearch.openSearch('http://en.wikipedia.org/w/api.php', 'small business', 10, 'xml').always(function(data, status, xhr) {
-	// 	console.log('The status is ' + status);
-	// 	console.log("The fucking call finished.");
-	// 	console.log(data);
-	// 	console.log(xhr);
-	// 	console.log(xhr.responseXML);
-	// });
 
-	mw.delegateQuery('http://en.wikipedia.org/w/api.php', 'small business', 10);
-	mw.delegateQuery('http://smallbusiness.com/w/api.php', 'small business', 10).done(function(data, status, xhr) {
-		var $xmlr = $.parseXML(data);
-		console.log($xmlr);
-
-		$(data).find('item').each(function(i, e) {
-			$('.xml-results').append(e).append('<br>');
-		});
-	});
+	mw.delegateQuery('http://localhost:8888/mwapisearch/functions.php', 'http://en.wikipedia.org/w/api.php', ['something', 'small business', 'one two three'], 10);
 
 });
