@@ -25,24 +25,17 @@ $(document).ready(function() {
 		$('.results-list').html('');
 		if (validateSearchForm()) {
 			$('.loader').removeClass('hidden');
-			$('.results-list').appendMultiTermResults(
+			var requests = mw.search(
+				'http://localhost:8888/mwapisearch/functions.php', // internal function URL
 				$('#wiki option:selected').data('endpoint'),
-				$('#terms').val().split(','),
-				$('#limit').val(),
-				$('#wiki option:selected').data('baseurl'),
-				function() {
-					$('.loader').addClass('hidden');
-					$('.results h1').removeClass('hidden');
-				}
+				$('#terms').val().split(', '),
+				$('#limit').val()
 			);
+			$('.results-list').insertMWResults(requests, $('#limit').val(), function() {
+				$('.loader').addClass('hidden');
+				$('.results h1').removeClass('hidden');
+			});
 		}
 	});
-
-
-	// var queries = mw.delegateQuery('http://localhost:8888/mwapisearch/functions.php', 'http://en.wikipedia.org/w/api.php', ['something', 'small business', 'one two three'], 10);
-
-	// mw.processResults(queries, $('.xml-results').setXMLResults);
-
-	$('.xml-results').appendXMLResults('http://localhost:8888/mwapisearch/functions.php', 'http://en.wikipedia.org/w/api.php', ['something', 'small business', 'one two three'], 10);
 
 });
